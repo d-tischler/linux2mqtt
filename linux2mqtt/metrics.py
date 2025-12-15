@@ -233,6 +233,15 @@ class CPUMetricThread(BaseMetricThread):
         self.metric = metric
         self.interval = interval
 
+    def human_readable_compact(self, seconds: int) -> str:
+        seconds = int(seconds)
+        days, seconds = divmod(seconds, 86400)
+        hours, seconds = divmod(seconds, 3600)
+        minutes, seconds = divmod(seconds, 60)
+        if days:
+            return f"{days}d {hours:02}:{minutes:02}:{seconds:02}"
+        return f"{hours:02}:{minutes:02}:{seconds:02}"
+        
     def run(self) -> None:
         """Run the cpu thread. Once data is gathered, it is put into the queue and the thread exits.
 
@@ -244,9 +253,12 @@ class CPUMetricThread(BaseMetricThread):
         """
         try:
             cpu_times = psutil.cpu_times_percent(interval=self.interval, percpu=False)
+            cpu_uptime = time.time() - psutil.boot_time()
+            print(cpu_uptime, type(cpu_uptime))
             self.metric.polled_result = {
                 **jsons.dump(cpu_times),  # type: ignore[unused-ignore]
                 "used": 100.0 - cpu_times.idle,
+                "uptime": self.human_readable_compact(cpu_uptime)
             }
             self.result_queue.put(self.metric)
         except Exception as ex:
