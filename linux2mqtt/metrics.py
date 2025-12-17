@@ -254,7 +254,6 @@ class CPUMetricThread(BaseMetricThread):
         try:
             cpu_times = psutil.cpu_times_percent(interval=self.interval, percpu=False)
             cpu_uptime = time.time() - psutil.boot_time()
-            print(cpu_uptime, type(cpu_uptime))
             self.metric.polled_result = {
                 **jsons.dump(cpu_times),  # type: ignore[unused-ignore]
                 "used": 100.0 - cpu_times.idle,
